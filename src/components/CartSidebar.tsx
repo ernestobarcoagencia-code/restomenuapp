@@ -248,6 +248,7 @@ ${items.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join('\n'
                                         )}
                                     </button>
                                 </div>
+                            </form>
                         </div>
                     )}
                 </div>
