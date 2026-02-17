@@ -3,13 +3,19 @@ export const getSubdomain = () => {
 
     // Handle localhost
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        // For testing, we can use a query param or a hardcoded fallback
-        // Try to get from query param ?slug=...
+        // Allow testing subdomains locally like: admin.localhost or elbaqueano.localhost
+        // NOTE: Requires adding "127.0.0.1 admin.localhost" etc. to /etc/hosts
+        const parts = hostname.split('.');
+        if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== 'www') {
+            return parts[0];
+        }
+
+        // Fallback: Query Param ?slug=...
         const urlParams = new URLSearchParams(window.location.search);
         const slug = urlParams.get('slug');
         if (slug) return slug;
 
-        // Default fallback for dev (change this to test different tenants)
+        // Default fallback for simple localhost:3000
         return 'elbaqueanomartinez';
     }
 
