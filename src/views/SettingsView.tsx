@@ -8,6 +8,7 @@ export const SettingsView: React.FC = () => {
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
+    const [globalDiscount, setGlobalDiscount] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
@@ -16,6 +17,7 @@ export const SettingsView: React.FC = () => {
             setName(selectedRestaurant.name);
             setSlug(selectedRestaurant.slug);
             setWhatsapp(selectedRestaurant.whatsapp_number || '');
+            setGlobalDiscount(selectedRestaurant.global_discount_percent?.toString() || '');
         }
     }, [selectedRestaurant]);
 
@@ -31,7 +33,8 @@ export const SettingsView: React.FC = () => {
             .update({
                 name,
                 slug,
-                whatsapp_number: whatsapp
+                whatsapp_number: whatsapp,
+                global_discount_percent: globalDiscount ? parseInt(globalDiscount) : 0
             })
             .eq('id', selectedRestaurant.id);
 
@@ -98,6 +101,20 @@ export const SettingsView: React.FC = () => {
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                         <p className="text-xs text-gray-500 mt-1">Formato internacional (ej: 5491171540523). Aquí llegarán los pedidos.</p>
+                    </div>
+
+                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                        <label className="block text-sm font-bold text-orange-800 mb-1">Descuento Global (%)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            placeholder="0"
+                            value={globalDiscount}
+                            onChange={(e) => setGlobalDiscount(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border border-orange-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Este descuento se aplicará a TODOS los productos que no tengan un descuento específico.</p>
                     </div>
 
                     <div className="pt-4 flex items-center gap-4">

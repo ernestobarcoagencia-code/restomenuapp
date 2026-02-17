@@ -6,6 +6,7 @@ export interface Restaurant {
     logo_url: string | null;
     whatsapp_number: string;
     theme_colors?: any;
+    global_discount_percent?: number;
 }
 
 export interface Category {
@@ -23,7 +24,10 @@ export interface Product {
     description: string | null;
     price: number;
     image_url: string | null;
+    image_path?: string | null;
     is_available: boolean;
+    discount_price?: number;
+    discount_percent?: number;
 }
 
 export interface CartItem extends Product {

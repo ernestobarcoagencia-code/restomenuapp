@@ -114,7 +114,11 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
                         {filteredProducts.map(product => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                globalDiscount={restaurant.global_discount_percent}
+                            />
                         ))}
                     </div>
                 )}
