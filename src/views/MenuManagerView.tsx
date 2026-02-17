@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAdminRestaurant } from '../context/AdminRestaurantContext';
 import { supabase } from '../lib/supabase';
 import type { Category, Product } from '../types';
-import { Plus, Edit2, Trash2, Image as ImageIcon, Check, X, Loader2, List, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, Image as ImageIcon, Check, X, Loader2, List, Upload, Download } from 'lucide-react';
 import clsx from 'clsx';
 
 export const MenuManagerView: React.FC = () => {
@@ -32,6 +32,77 @@ export const MenuManagerView: React.FC = () => {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryName, setCategoryName] = useState('');
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+    // Import State
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importUrl, setImportUrl] = useState('');
+    const [isImporting, setIsImporting] = useState(false);
+
+    const handleImportMenu = async () => {
+        if (!importUrl) return;
+        setIsImporting(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('scrape-menu', {
+                body: { url: importUrl }
+            });
+
+            if (error) throw error;
+
+            if (data.items && data.items.length > 0) {
+                // 1. Ensure categories exist
+                // Note: In real usage, we should probably batch this or ask for confirmation.
+                const uniqueCategories = [...new Set(data.items.map((i: any) => i.category))];
+                for (const catName of uniqueCategories) {
+                    if (!catName) continue;
+                    let cat = categories.find(c => c.name === catName);
+                    if (!cat) {
+                        const { data: newCat } = await supabase.from('categories').insert({
+                            restaurant_id: selectedRestaurant?.id,
+                            name: catName,
+                            sort_order: categories.length * 10
+                        }).select().single();
+                        // Optimistic update or just rely on refreshData at end
+                    }
+                }
+
+                // Refresh categories to get new IDs
+                const { data: currentCats } = await supabase.from('categories').select('*').eq('restaurant_id', selectedRestaurant?.id);
+
+                const productsToInsert = data.items.map((item: any) => {
+                    const catId = currentCats?.find((c: any) => c.name === item.category)?.id;
+                    if (!catId) return null;
+
+                    return {
+                        restaurant_id: selectedRestaurant?.id,
+                        category_id: catId,
+                        name: item.name,
+                        description: item.description,
+                        price: item.price,
+                        image_url: item.image_url,
+                        is_available: true
+                    };
+                }).filter((p: any) => p !== null);
+
+                if (productsToInsert.length > 0) {
+                    await supabase.from('products').insert(productsToInsert);
+                    alert(`¡Importación exitosa! Se agregaron ${productsToInsert.length} productos.`);
+                    setIsImportModalOpen(false);
+                    setImportUrl('');
+                    await fetchData();
+                } else {
+                    alert('No se pudieron procesar los productos (verifique categorías).');
+                }
+            } else {
+                alert('No se encontraron productos en esa URL.');
+            }
+
+        } catch (error) {
+            console.error('Error importing menu:', error);
+            alert('Error al importar el menú. Verifica la URL. (Nota: El scraper es experimental)');
+        } finally {
+            setIsImporting(false);
+        }
+    };
 
     const fetchData = async () => {
         if (!selectedRestaurant) return;
@@ -218,6 +289,13 @@ export const MenuManagerView: React.FC = () => {
                     <p className="text-gray-500 mt-1">Administra categorías y productos.</p>
                 </div>
                 <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
+                    >
+                        <Download size={20} />
+                        Importar
+                    </button>
                     <button
                         onClick={() => setIsCategoryModalOpen(true)}
                         className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
@@ -541,6 +619,46 @@ export const MenuManagerView: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Import Modal */}
+            {isImportModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                        <h3 className="text-xl font-bold mb-4">Importar Menú</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Pega la URL de tu restaurante en <strong>Rappi</strong> o <strong>PedidosYa</strong>.
+                            Intentaremos extraer categorías y productos automáticamente.
+                        </p>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">URL del Menú</label>
+                            <input
+                                type="url"
+                                value={importUrl}
+                                onChange={(e) => setImportUrl(e.target.value)}
+                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 border"
+                                placeholder="https://www.rappi.com.ar/restaurantes/..."
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsImportModalOpen(false)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleImportMenu}
+                                disabled={isImporting || !importUrl}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isImporting ? 'Analizando...' : 'Importar'}
+                            </button>
                         </div>
                     </div>
                 </div>
