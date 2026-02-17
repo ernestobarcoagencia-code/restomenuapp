@@ -3,13 +3,14 @@ import { X, Trash2, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../store/cart';
 import { supabase } from '../lib/supabase';
 
-
 interface CartSidebarProps {
     isOpen: boolean;
     onClose: () => void;
+    whatsappNumber: string;
+    restaurantId: string;
 }
 
-export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
+export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, whatsappNumber, restaurantId }) => {
     const { items, removeItem, updateQuantity, total, clearCart } = useCartStore();
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
@@ -25,10 +26,11 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
         try {
             const orderTotal = total();
 
-            // 1. Save to Supabase
+            // 1. Save to Supabase (linked to restaurant)
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert({
+                    restaurant_id: restaurantId,
                     customer_name: name,
                     customer_phone: phone,
                     type: deliveryType,
@@ -41,6 +43,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
             if (orderError) throw orderError;
 
             const orderItems = items.map(item => ({
+                restaurant_id: restaurantId,
                 order_id: orderData.id,
                 product_id: item.id,
                 quantity: item.quantity,
@@ -53,7 +56,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
             if (itemsError) throw itemsError;
 
-            // 2. Redirect to WhatsApp
+            // 2. Redirect to WhatsApp (Dynamic Number)
             const message = `*Nuevo Pedido #${orderData.id.slice(0, 8)}*
 ------------------------
 *Cliente:* ${name}
@@ -63,7 +66,7 @@ ${items.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join('\n'
 ------------------------
 *Total: $${orderTotal}*`;
 
-            const whatsappUrl = `https://wa.me/5491171540523?text=${encodeURIComponent(message)}`;
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
             clearCart();
             onClose();
