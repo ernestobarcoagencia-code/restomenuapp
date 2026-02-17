@@ -1,11 +1,23 @@
+export interface Restaurant {
+    id: string;
+    name: string;
+    slug: string;
+    custom_domain: string | null;
+    logo_url: string | null;
+    whatsapp_number: string;
+    theme_colors?: any;
+}
+
 export interface Category {
     id: string;
+    restaurant_id: string;
     name: string;
     sort_order: number;
 }
 
 export interface Product {
     id: string;
+    restaurant_id: string;
     category_id: string;
     name: string;
     description: string | null;
@@ -20,6 +32,7 @@ export interface CartItem extends Product {
 
 export interface Order {
     id: string;
+    restaurant_id: string;
     customer_name: string;
     customer_phone: string;
     type: 'delivery' | 'pickup';

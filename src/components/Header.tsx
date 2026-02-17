@@ -4,9 +4,10 @@ import { useCartStore } from '../store/cart';
 
 interface HeaderProps {
     onOpenCart: () => void;
+    restaurantName?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenCart }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenCart, restaurantName = 'Restaurante Demo' }) => {
     const items = useCartStore((state) => state.items);
     const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -15,13 +16,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart }) => {
             <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        R
+                        {restaurantName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h1 className="font-bold text-gray-900 leading-tight">Restaurante Demo</h1>
+                        <h1 className="font-bold text-gray-900 leading-tight">{restaurantName}</h1>
                         <div className="flex items-center text-xs text-gray-500 gap-1">
                             <MapPin size={12} />
-                            <span>Buenos Aires, Palermo</span>
+                            <span>Buenos Aires</span>
                         </div>
                     </div>
                 </div>

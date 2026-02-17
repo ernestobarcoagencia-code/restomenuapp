@@ -1,29 +1,59 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Category, Product } from '../types';
+import type { Category, Product, Restaurant } from '../types';
 import { Header } from '../components/Header';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { ProductCard } from '../components/ProductCard';
 import { CartSidebar } from '../components/CartSidebar';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { useCartStore } from '../store/cart';
 
-export const PublicMenu: React.FC = () => {
+interface PublicMenuProps {
+    slug: string;
+}
+
+export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
+    const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [activeCategory, setActiveCategory] = useState('all');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // Store
+    const clearCart = useCartStore(state => state.clearCart);
 
-    const fetchData = async () => {
+    useEffect(() => {
+        fetchRestaurantData();
+        // Clear cart when mounting a menu (safety for multi-tenant switching)
+        clearCart();
+    }, [slug]);
+
+    const fetchRestaurantData = async () => {
         try {
             setLoading(true);
+            setError(null);
+
+            // 1. Get Restaurant by Slug
+            const { data: resto, error: restoError } = await supabase
+                .from('restaurants')
+                .select('*')
+                .eq('slug', slug)
+                .single();
+
+            if (restoError || !resto) {
+                console.error('Restaurant not found:', restoError);
+                setError('Restaurante no encontrado.');
+                return;
+            }
+
+            setRestaurant(resto);
+
+            // 2. Get Categories & Products for this Restaurant
             const [categoriesRes, productsRes] = await Promise.all([
-                supabase.from('categories').select('*').order('sort_order'),
-                supabase.from('products').select('*').eq('is_available', true)
+                supabase.from('categories').select('*').eq('restaurant_id', resto.id).order('sort_order'),
+                supabase.from('products').select('*').eq('restaurant_id', resto.id).eq('is_available', true)
             ]);
 
             if (categoriesRes.error) throw categoriesRes.error;
@@ -31,8 +61,9 @@ export const PublicMenu: React.FC = () => {
 
             setCategories(categoriesRes.data || []);
             setProducts(productsRes.data || []);
-        } catch (error) {
-            console.error('Error fetching data:', error);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError('Hubo un error al cargar el menú.');
         } finally {
             setLoading(false);
         }
@@ -50,9 +81,20 @@ export const PublicMenu: React.FC = () => {
         );
     }
 
+    if (error || !restaurant) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+                <AlertCircle size={48} className="text-red-500 mb-4" />
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Ops!</h1>
+                <p className="text-gray-600">{error || 'No se pudo cargar la información.'}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            <Header onOpenCart={() => setIsCartOpen(true)} />
+            {/* Pass restaurant details to Header if needed, for now using static prop or verify if Header takes props */}
+            <Header onOpenCart={() => setIsCartOpen(true)} restaurantName={restaurant.name} />
 
             <CategoryFilter
                 categories={categories}
@@ -78,7 +120,12 @@ export const PublicMenu: React.FC = () => {
                 )}
             </main>
 
-            <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            <CartSidebar
+                isOpen={isCartOpen}
+                onClose={() => setIsCartOpen(false)}
+                whatsappNumber={restaurant.whatsapp_number}
+                restaurantId={restaurant.id}
+            />
         </div>
     );
 };
