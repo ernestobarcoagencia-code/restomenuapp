@@ -56,11 +56,11 @@ export const MenuManagerView: React.FC = () => {
                     if (!catName) continue;
                     let cat = categories.find(c => c.name === catName);
                     if (!cat) {
-                        const { data: newCat } = await supabase.from('categories').insert({
+                        await supabase.from('categories').insert({
                             restaurant_id: selectedRestaurant?.id,
                             name: catName,
                             sort_order: categories.length * 10
-                        }).select().single();
+                        });
                         // Optimistic update or just rely on refreshData at end
                     }
                 }
