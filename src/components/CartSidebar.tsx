@@ -15,6 +15,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, whats
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [timeOption, setTimeOption] = useState<'asap' | 'scheduled'>('asap');
+    const [requestedTime, setRequestedTime] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!isOpen) return null;
@@ -35,7 +38,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, whats
                     customer_phone: phone,
                     type: deliveryType,
                     status: 'pending',
-                    total: orderTotal
+                    total: orderTotal,
+                    delivery_address: deliveryType === 'delivery' ? deliveryAddress : null,
+                    requested_time: timeOption === 'asap' ? 'Lo antes posible' : requestedTime
                 })
                 .select()
                 .single();
@@ -61,6 +66,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, whats
 ------------------------
 *Cliente:* ${name}
 *Tipo:* ${deliveryType === 'delivery' ? '🛵 Envío a Domicilio' : '🥡 Retiro por Local'}
+${deliveryType === 'delivery' ? `*Dirección:* ${deliveryAddress}` : ''}
+*Horario:* ${timeOption === 'asap' ? 'Lo antes posible' : requestedTime}
 ------------------------
 ${items.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join('\n')}
 ------------------------
@@ -178,6 +185,51 @@ ${items.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join('\n'
                                     </div>
                                 </div>
 
+                                {deliveryType === 'delivery' && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Dirección de Entrega</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={deliveryAddress}
+                                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                                            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-3 py-2 bg-white border"
+                                            placeholder="Calle, Altura, Piso..."
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Horario de Entrega</label>
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setTimeOption('asap')}
+                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${timeOption === 'asap' ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-gray-200 text-gray-600'}`}
+                                            >
+                                                Lo antes posible
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setTimeOption('scheduled')}
+                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${timeOption === 'scheduled' ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-gray-200 text-gray-600'}`}
+                                            >
+                                                Programar
+                                            </button>
+                                        </div>
+                                        {timeOption === 'scheduled' && (
+                                            <input
+                                                type="time"
+                                                required
+                                                value={requestedTime}
+                                                onChange={(e) => setRequestedTime(e.target.value)}
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-3 py-2 bg-white border animate-in fade-in slide-in-from-top-1 duration-200"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="pt-2">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="font-semibold text-gray-900">Total</span>
@@ -191,16 +243,15 @@ ${items.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join('\n'
                                         {isSubmitting ? 'Procesando...' : (
                                             <>
                                                 <MessageCircle size={20} />
-                                                Enviar Pedido por WhatsApp
+                                                Realizar Pedido
                                             </>
                                         )}
                                     </button>
                                 </div>
-                            </form>
                         </div>
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Settings, LogOut, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Settings, LogOut, Store, ExternalLink } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdminRestaurant } from '../../context/AdminRestaurantContext';
 import type { Restaurant } from '../../types';
@@ -87,6 +87,18 @@ export const AdminSidebar: React.FC = () => {
                     <Settings size={20} />
                     <span>Configuración</span>
                 </NavLink>
+
+                <div className="pt-4 mt-auto">
+                    <a
+                        href={`/?slug=${selectedRestaurant?.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 text-blue-400 hover:bg-blue-900/20 hover:text-blue-300 rounded-lg transition-colors border border-blue-900/30"
+                    >
+                        <ExternalLink size={20} />
+                        <span>Ver Menú Online</span>
+                    </a>
+                </div>
             </nav>
 
             <div className="p-4 border-t border-gray-800">

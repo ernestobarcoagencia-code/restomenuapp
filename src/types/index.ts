@@ -7,6 +7,7 @@ export interface Restaurant {
     whatsapp_number: string;
     theme_colors?: any;
     global_discount_percent?: number;
+    banner_url?: string | null;
 }
 
 export interface Category {
@@ -42,6 +43,8 @@ export interface Order {
     type: 'delivery' | 'pickup';
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
     total: number;
+    delivery_address?: string;
+    requested_time?: string;
     note?: string;
     created_at: string;
     items?: OrderItem[];

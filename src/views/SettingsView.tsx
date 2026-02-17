@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminRestaurant } from '../context/AdminRestaurantContext';
 import { supabase } from '../lib/supabase';
-import { Save, Loader2, CheckCircle } from 'lucide-react';
+import { Save, Loader2, CheckCircle, Upload, X } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
     const { selectedRestaurant, refreshRestaurants } = useAdminRestaurant();
@@ -9,7 +9,9 @@ export const SettingsView: React.FC = () => {
     const [slug, setSlug] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
     const [globalDiscount, setGlobalDiscount] = useState('');
+    const [bannerUrl, setBannerUrl] = useState('');
     const [loading, setLoading] = useState(false);
+    const [uploadingBanner, setUploadingBanner] = useState(false);
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
@@ -18,6 +20,7 @@ export const SettingsView: React.FC = () => {
             setSlug(selectedRestaurant.slug);
             setWhatsapp(selectedRestaurant.whatsapp_number || '');
             setGlobalDiscount(selectedRestaurant.global_discount_percent?.toString() || '');
+            setBannerUrl(selectedRestaurant.banner_url || '');
         }
     }, [selectedRestaurant]);
 
@@ -34,7 +37,8 @@ export const SettingsView: React.FC = () => {
                 name,
                 slug,
                 whatsapp_number: whatsapp,
-                global_discount_percent: globalDiscount ? parseInt(globalDiscount) : 0
+                global_discount_percent: globalDiscount ? parseInt(globalDiscount) : 0,
+                banner_url: bannerUrl
             })
             .eq('id', selectedRestaurant.id);
 
@@ -48,6 +52,43 @@ export const SettingsView: React.FC = () => {
         }
 
         setLoading(false);
+    };
+
+    const handleBannerUpload = async (file: File) => {
+        if (!selectedRestaurant) return;
+        setUploadingBanner(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `banner_${Date.now()}.${fileExt}`;
+            const filePath = `${selectedRestaurant.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('menu-images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('menu-images')
+                .getPublicUrl(filePath);
+
+            setBannerUrl(publicUrl);
+        } catch (error) {
+            console.error('Error uploading banner:', error);
+            alert('Error al subir banner. Verifique los permisos.');
+        } finally {
+            setUploadingBanner(false);
+        }
+    };
+
+    const handlePaste = async (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) handleBannerUpload(blob);
+            }
+        }
     };
 
     if (!selectedRestaurant) return <div className="p-8">Selecciona un restaurante.</div>;
@@ -115,6 +156,61 @@ export const SettingsView: React.FC = () => {
                             className="w-full px-4 py-2 rounded-lg border border-orange-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                         <p className="text-xs text-orange-600 mt-1">Este descuento se aplicará a TODOS los productos que no tengan un descuento específico.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Banner Superior (Opcional)</label>
+                        <div
+                            onPaste={handlePaste}
+                            className="space-y-3"
+                        >
+                            <div className="flex gap-2">
+                                <input
+                                    type="url"
+                                    value={bannerUrl}
+                                    onChange={(e) => setBannerUrl(e.target.value)}
+                                    placeholder="URL de imagen externa (https://...)"
+                                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                />
+                            </div>
+
+                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors group">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            handleBannerUpload(e.target.files[0]);
+                                        }
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                />
+                                <div className="text-gray-500 flex flex-col items-center gap-2 group-hover:text-gray-700">
+                                    {uploadingBanner ? (
+                                        <Loader2 className="animate-spin text-orange-500" />
+                                    ) : (
+                                        <>
+                                            <Upload size={32} className="text-gray-300 group-hover:text-gray-400" />
+                                            <span className="text-sm font-medium">Click para subir o Arrastrar banner</span>
+                                            <span className="text-xs text-gray-400">(Recomendado: 1200x300px o similar)</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {bannerUrl && (
+                                <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                    <img src={bannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setBannerUrl('')}
+                                        className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="pt-4 flex items-center gap-4">

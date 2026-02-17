@@ -5,7 +5,7 @@ import { Header } from '../components/Header';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { ProductCard } from '../components/ProductCard';
 import { CartSidebar } from '../components/CartSidebar';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../store/cart';
 
 interface PublicMenuProps {
@@ -96,6 +96,17 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
             {/* Pass restaurant details to Header if needed, for now using static prop or verify if Header takes props */}
             <Header onOpenCart={() => setIsCartOpen(true)} restaurantName={restaurant.name} />
 
+            {restaurant.banner_url && (
+                <div className="w-full h-48 md:h-64 relative bg-gray-200">
+                    <img
+                        src={restaurant.banner_url}
+                        alt="Restaurante Banner"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20"></div>
+                </div>
+            )}
+
             <CategoryFilter
                 categories={categories}
                 activeId={activeCategory}
@@ -130,6 +141,19 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
                 whatsappNumber={restaurant.whatsapp_number}
                 restaurantId={restaurant.id}
             />
+
+            {/* Floating WhatsApp Button */}
+            {restaurant.whatsapp_number && (
+                <a
+                    href={`https://wa.me/${restaurant.whatsapp_number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors z-40 flex items-center justify-center animate-in fade-in zoom-in duration-300"
+                    aria-label="Contactar por WhatsApp"
+                >
+                    <MessageCircle size={28} />
+                </a>
+            )}
         </div>
     );
 };
