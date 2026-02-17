@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, MapPin } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../store/cart';
 
 interface HeaderProps {

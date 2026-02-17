@@ -3,7 +3,7 @@ import { useAdminRestaurant } from '../context/AdminRestaurantContext';
 import { supabase } from '../lib/supabase';
 import type { Category, Product } from '../types';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Check, X, Loader2 } from 'lucide-react';
-import { clsx } from 'clsx';
+import clsx from 'clsx';
 
 export const MenuManagerView: React.FC = () => {
     const { selectedRestaurant } = useAdminRestaurant();
