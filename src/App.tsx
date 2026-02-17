@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PublicMenu } from './views/PublicMenu';
 import { LiveOrdersView } from './views/LiveOrdersView';
 import { DashboardHome } from './views/DashboardHome';
+import { SettingsView } from './views/SettingsView';
+import { MenuManagerView } from './views/MenuManagerView';
 import { AdminLayout } from './layouts/AdminLayout';
 import { Login } from './views/Login';
 import { getSubdomain, ADMIN_SUBDOMAIN } from './lib/domain';
@@ -39,8 +41,8 @@ function App() {
               <Route path="/" element={<AdminLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="orders" element={<LiveOrdersView />} />
-                <Route path="menu" element={<div>Menu Config (Coming Soon)</div>} />
-                <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+                <Route path="menu" element={<MenuManagerView />} />
+                <Route path="settings" element={<SettingsView />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
