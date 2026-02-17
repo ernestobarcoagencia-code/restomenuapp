@@ -94,10 +94,14 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             {/* Pass restaurant details to Header if needed, for now using static prop or verify if Header takes props */}
-            <Header onOpenCart={() => setIsCartOpen(true)} restaurantName={restaurant.name} />
+            <Header
+                onOpenCart={() => setIsCartOpen(true)}
+                restaurantName={restaurant.name}
+                logoUrl={restaurant.logo_url}
+            />
 
             {restaurant.banner_url && (
-                <div className="w-full h-48 md:h-64 relative bg-gray-200">
+                <div className="w-full h-64 md:h-80 lg:h-96 relative bg-gray-200">
                     <img
                         src={restaurant.banner_url}
                         alt="Restaurante Banner"

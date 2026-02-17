@@ -10,8 +10,10 @@ export const SettingsView: React.FC = () => {
     const [whatsapp, setWhatsapp] = useState('');
     const [globalDiscount, setGlobalDiscount] = useState('');
     const [bannerUrl, setBannerUrl] = useState('');
+    const [logoUrl, setLogoUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [uploadingBanner, setUploadingBanner] = useState(false);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
@@ -21,6 +23,7 @@ export const SettingsView: React.FC = () => {
             setWhatsapp(selectedRestaurant.whatsapp_number || '');
             setGlobalDiscount(selectedRestaurant.global_discount_percent?.toString() || '');
             setBannerUrl(selectedRestaurant.banner_url || '');
+            setLogoUrl(selectedRestaurant.logo_url || '');
         }
     }, [selectedRestaurant]);
 
@@ -38,7 +41,8 @@ export const SettingsView: React.FC = () => {
                 slug,
                 whatsapp_number: whatsapp,
                 global_discount_percent: globalDiscount ? parseInt(globalDiscount) : 0,
-                banner_url: bannerUrl
+                banner_url: bannerUrl,
+                logo_url: logoUrl
             })
             .eq('id', selectedRestaurant.id);
 
@@ -52,6 +56,33 @@ export const SettingsView: React.FC = () => {
         }
 
         setLoading(false);
+    };
+
+    const handleLogoUpload = async (file: File) => {
+        if (!selectedRestaurant) return;
+        setUploadingLogo(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo_${Date.now()}.${fileExt}`;
+            const filePath = `${selectedRestaurant.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('menu-images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('menu-images')
+                .getPublicUrl(filePath);
+
+            setLogoUrl(publicUrl);
+        } catch (error) {
+            console.error('Error uploading logo:', error);
+            alert('Error al subir logo. Verifique los permisos.');
+        } finally {
+            setUploadingLogo(false);
+        }
     };
 
     const handleBannerUpload = async (file: File) => {
@@ -192,7 +223,7 @@ export const SettingsView: React.FC = () => {
                                         <>
                                             <Upload size={32} className="text-gray-300 group-hover:text-gray-400" />
                                             <span className="text-sm font-medium">Click para subir o Arrastrar banner</span>
-                                            <span className="text-xs text-gray-400">(Recomendado: 1200x300px o similar)</span>
+                                            <span className="text-xs text-orange-600 font-medium">(Ideal: 1920x600px)</span>
                                         </>
                                     )}
                                 </div>

@@ -36,6 +36,7 @@ export const MenuManagerView: React.FC = () => {
     // Import State
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [importUrl, setImportUrl] = useState('');
+    const [importInstructions, setImportInstructions] = useState(''); // New state
     const [isImporting, setIsImporting] = useState(false);
 
     const handleImportMenu = async () => {
@@ -43,7 +44,7 @@ export const MenuManagerView: React.FC = () => {
         setIsImporting(true);
         try {
             const { data, error } = await supabase.functions.invoke('scrape-menu', {
-                body: { url: importUrl }
+                body: { url: importUrl, instructions: importInstructions }
             });
 
             if (error) throw error;
@@ -643,6 +644,19 @@ export const MenuManagerView: React.FC = () => {
                                 placeholder="https://www.rappi.com.ar/restaurantes/..."
                                 autoFocus
                             />
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Instrucciones IA (Opcional)</label>
+                            <textarea
+                                value={importInstructions}
+                                onChange={(e) => setImportInstructions(e.target.value)}
+                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2 border h-20 text-sm"
+                                placeholder="Ej: Ignorar descuentos, usar precio normal..."
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Escribe instrucciones especiales para mejorar la extracción.
+                            </p>
                         </div>
 
                         <div className="flex justify-end gap-3">
