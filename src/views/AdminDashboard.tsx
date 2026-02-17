@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Order } from '../types';
-import { Bell, CheckCircle, Clock, Package } from 'lucide-react';
+import type { Order } from '../types';
+import { Bell, Clock, Package } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminDashboard: React.FC = () => {

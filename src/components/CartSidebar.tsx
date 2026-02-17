@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Trash2, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../store/cart';
 import { supabase } from '../lib/supabase';
-import { Order, OrderItem } from '../types';
+
 
 interface CartSidebarProps {
     isOpen: boolean;

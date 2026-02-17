@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { Category } from '../types';
+import type { Category } from '../types';
 
 interface CategoryFilterProps {
     categories: Category[];
