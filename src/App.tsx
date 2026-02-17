@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PublicMenu } from './views/PublicMenu';
-import { AdminDashboard } from './views/AdminDashboard';
+import { LiveOrdersView } from './views/LiveOrdersView';
+import { DashboardHome } from './views/DashboardHome';
+import { AdminLayout } from './layouts/AdminLayout';
 import { Login } from './views/Login';
 import { getSubdomain, ADMIN_SUBDOMAIN } from './lib/domain';
 import { Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { AdminRestaurantProvider } from './context/AdminRestaurantContext';
 
 function App() {
   const [subdomain, setSubdomain] = useState<string | null>(null);
@@ -29,15 +32,20 @@ function App() {
   if (subdomain === ADMIN_SUBDOMAIN) {
     return (
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={
-            <AuthGuard>
-              <AdminDashboard />
-            </AuthGuard>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AuthGuard>
+          <AdminRestaurantProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<AdminLayout />}>
+                <Route index element={<DashboardHome />} />
+                <Route path="orders" element={<LiveOrdersView />} />
+                <Route path="menu" element={<div>Menu Config (Coming Soon)</div>} />
+                <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AdminRestaurantProvider>
+        </AuthGuard>
       </BrowserRouter>
     );
   }
@@ -58,6 +66,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Allow login page without session
+  if (window.location.pathname === '/login') return <>{children}</>;
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -74,7 +85,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) return <Login />; // Render Login directly instead of Redirect loop if possible, or use proper router redirect
 
   return <>{children}</>;
 }
