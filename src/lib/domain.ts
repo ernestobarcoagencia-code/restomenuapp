@@ -1,4 +1,9 @@
 export const getSubdomain = () => {
+    // 1. Prioritize Query Param (allows testing/overriding anywhere)
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get('slug');
+    if (slug) return slug;
+
     const hostname = window.location.hostname;
 
     // Handle localhost
@@ -10,28 +15,20 @@ export const getSubdomain = () => {
             return parts[0];
         }
 
-        // Fallback: Query Param ?slug=...
-        const urlParams = new URLSearchParams(window.location.search);
-        const slug = urlParams.get('slug');
-        if (slug) return slug;
-
         // Default fallback for simple localhost:3000
         return 'elbaqueanomartinez';
     }
 
-    // Handle Vercel preview URLs (simplify to main or detect subdomain if complex)
-    if (hostname.endsWith('.vercel.app')) {
-        // If it's the main deployment, maybe act as admin or specific tenant?
-        // For now, treat restomenuapp.vercel.app as Admin? Or let's say:
-        const parts = hostname.split('.');
-        if (parts.length >= 3) return parts[0];
-        return null; // resolving to main app probably
-    }
-
-    // Handle Production Domains (e.g., elbaqueanomartinez.barcoagencia.com)
+    // Handle Production / Vercel
+    // If hostname is "restomenuapp.vercel.app" -> parts[0] is "restomenuapp"
+    // If hostname is "admin.restomenuapp.com" -> parts[0] is "admin"
     const parts = hostname.split('.');
-    if (parts.length >= 3) {
-        return parts[0]; // Returns 'elbaqueanomartinez' from 'elbaqueanomartinez.barcoagencia.com'
+
+    // Logic: Return the first part as the subdomain/slug
+    if (parts.length >= 2) {
+        // Exclude common prefixes if necessary, or just return first part
+        if (parts[0] === 'www') return parts[1];
+        return parts[0];
     }
 
     return null; // Root domain or unrecognized
