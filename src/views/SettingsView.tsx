@@ -190,6 +190,46 @@ export const SettingsView: React.FC = () => {
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Logo del Restaurante</label>
+                        <div className="flex gap-4 items-start">
+                            <div className="relative w-24 h-24 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                                {logoUrl ? (
+                                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        <Upload size={24} />
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            handleLogoUpload(e.target.files[0]);
+                                        }
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadingLogo && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <Loader2 className="animate-spin text-white" size={20} />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 space-y-2">
+                                <input
+                                    type="url"
+                                    value={logoUrl}
+                                    onChange={(e) => setLogoUrl(e.target.value)}
+                                    placeholder="URL del logo"
+                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                                />
+                                <p className="text-xs text-gray-500">Recomendado: Formato cuadrado (1:1), mín. 200x200px.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Banner Superior (Opcional)</label>
                         <div
                             onPaste={handlePaste}
