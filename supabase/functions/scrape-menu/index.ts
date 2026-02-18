@@ -41,10 +41,16 @@ serve(async (req) => {
 
         const response = await fetch(url, { headers });
         if (!response.ok) {
-            throw new Error(`Failed to fetch page: ${response.statusText}`);
+            throw new Error(`Error del sitio (${response.status}): ${response.statusText}`);
         }
 
         const html = await response.text();
+
+        // Check for soft blocks
+        if (html.includes('Cloudflare') || html.includes('Just a moment') || html.includes('Access denied')) {
+            throw new Error('Bloqueo anti-bots detectado (Cloudflare). Intenta de nuevo más tarde o usa otra URL.');
+        }
+
         const doc = new DOMParser().parseFromString(html, "text/html");
 
         if (url.includes('rappi')) {
@@ -119,6 +125,15 @@ serve(async (req) => {
                 }
             } catch (e) {
                 console.error("PedidosYa parsing error:", e);
+            }
+        }
+
+        if (items.length === 0) {
+            // Check if we got HTML but parsing failed
+            if (html.length > 0) {
+                console.log("Failed to parse items. HTML length:", html.length);
+                // Optional: throw new Error('No se pudieron extraer productos. La estructura del sitio puede haber cambiado.');
+                // For now, let it return empty items so frontend handles "No items found", but logging helps.
             }
         }
 
