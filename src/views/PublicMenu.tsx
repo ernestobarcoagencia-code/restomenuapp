@@ -111,6 +111,31 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
                 </div>
             )}
 
+            {/* Restaurant Idenitity Overlay */}
+            <div className="max-w-md mx-auto px-4 relative -mt-20 mb-6 z-10 flex flex-col items-center text-center">
+                {restaurant.logo_url ? (
+                    <div className="w-36 h-36 md:w-44 md:h-44 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white mb-3">
+                        <img
+                            src={restaurant.logo_url}
+                            alt={restaurant.name}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-36 h-36 md:w-44 md:h-44 rounded-full border-4 border-white shadow-xl overflow-hidden bg-orange-500 mb-3 flex items-center justify-center text-white text-5xl font-bold">
+                        {restaurant.name.charAt(0)}
+                    </div>
+                )}
+
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 drop-shadow-sm">{restaurant.name}</h1>
+                <div className="flex items-center gap-2 mt-2 justify-center">
+                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Abierto ahora
+                    </span>
+                </div>
+            </div>
+
             <CategoryFilter
                 categories={categories}
                 activeId={activeCategory}
