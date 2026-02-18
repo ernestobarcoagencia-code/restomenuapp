@@ -97,9 +97,14 @@ export const MenuManagerView: React.FC = () => {
                 alert('No se encontraron productos en esa URL.');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error importing menu:', error);
-            alert('Error al importar el menú. Verifica la URL. (Nota: El scraper es experimental)');
+            // Try to extract a meaningful message
+            let msg = 'Error desconocido';
+            if (error instanceof Error) msg = error.message;
+            if (error && typeof error === 'object' && 'message' in error) msg = (error as any).message;
+
+            alert(`Error al importar: ${msg}. \n\nVerifica que la URL sea de un RESTAURANTE específico y no de un listado.`);
         } finally {
             setIsImporting(false);
         }
