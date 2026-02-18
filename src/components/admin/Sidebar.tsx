@@ -16,10 +16,16 @@ export const AdminSidebar: React.FC = () => {
         <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed left-0 top-0">
             <div className="p-6 border-b border-gray-800">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center font-bold">
-                        B
-                    </div>
-                    <span className="font-bold text-lg">Barco Admin</span>
+                    {selectedRestaurant?.logo_url ? (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                            <img src={selectedRestaurant.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center font-bold shrink-0">
+                            B
+                        </div>
+                    )}
+                    <span className="font-bold text-lg truncate">{selectedRestaurant?.name || 'Barco Admin'}</span>
                 </div>
 
                 {/* Restaurant Selector */}

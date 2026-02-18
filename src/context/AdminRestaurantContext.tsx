@@ -28,8 +28,14 @@ export const AdminRestaurantProvider: React.FC<{ children: React.ReactNode }> = 
             console.error('Error fetching restaurants:', error);
         } else {
             setRestaurants(data || []);
+
+            // If we have a selected restaurant, update it with fresh data
+            if (selectedRestaurant) {
+                const updated = data?.find(r => r.id === selectedRestaurant.id);
+                if (updated) setSelectedRestaurant(updated);
+            }
             // Default to first one if none selected
-            if (data && data.length > 0 && !selectedRestaurant) {
+            else if (data && data.length > 0) {
                 setSelectedRestaurant(data[0]);
             }
         }
