@@ -101,7 +101,7 @@ export const PublicMenu: React.FC<PublicMenuProps> = ({ slug }) => {
             />
 
             {restaurant.banner_url && (
-                <div className="w-full h-64 md:h-80 lg:h-96 relative bg-gray-200">
+                <div className="w-full h-48 md:h-64 lg:h-80 relative bg-gray-200">
                     <img
                         src={restaurant.banner_url}
                         alt="Restaurante Banner"
