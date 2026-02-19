@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAdminRestaurant } from '../context/AdminRestaurantContext';
 import { supabase } from '../lib/supabase';
 import type { Category, Product } from '../types';
-import { Plus, Edit2, Trash2, Image as ImageIcon, Check, X, Loader2, List, Upload, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Image as ImageIcon, Check, X, Loader2, List, Upload, Download, FileSpreadsheet } from 'lucide-react';
 import clsx from 'clsx';
 
 export const MenuManagerView: React.FC = () => {
@@ -664,19 +664,112 @@ export const MenuManagerView: React.FC = () => {
                             </p>
                         </div>
 
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setIsImportModalOpen(false)}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex flex-col gap-4">
                             <button
                                 onClick={handleImportMenu}
                                 disabled={isImporting || !importUrl}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                                className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
                             >
-                                {isImporting ? 'Analizando...' : 'Importar'}
+                                {isImporting ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                                {isImporting ? 'Analizando URL...' : 'Importar desde URL'}
+                            </button>
+
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-gray-300" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="bg-white px-2 text-gray-500">O también puedes</span>
+                                </div>
+                            </div>
+
+                            <label className="block w-full cursor-pointer group">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+
+                                        setIsImporting(true);
+                                        try {
+                                            const text = await file.text();
+                                            const { data, error } = await supabase.functions.invoke('process-csv', {
+                                                body: { csv_content: text }
+                                            });
+
+                                            if (error) throw error;
+                                            if (data.error) throw new Error(data.error);
+
+                                            if (data.items && data.items.length > 0) {
+                                                const newCategories = [...categories];
+                                                let addedCount = 0;
+
+                                                for (const item of data.items) {
+                                                    // Find or create category
+                                                    let category = newCategories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
+                                                    if (!category) {
+                                                        const { data: catData, error: catError } = await supabase
+                                                            .from('categories')
+                                                            .insert({
+                                                                restaurant_id: selectedRestaurant.id,
+                                                                name: item.category,
+                                                                sort_order: newCategories.length
+                                                            })
+                                                            .select()
+                                                            .single();
+
+                                                        if (catError) throw catError;
+                                                        if (!catData) throw new Error('Failed to create category');
+                                                        category = catData;
+                                                        newCategories.push(category);
+                                                    }
+
+                                                    // Add product
+                                                    const { error: prodError } = await supabase
+                                                        .from('products')
+                                                        .insert({
+                                                            restaurant_id: selectedRestaurant.id,
+                                                            category_id: category.id,
+                                                            name: item.name,
+                                                            description: item.description,
+                                                            price: item.price,
+                                                            image_url: item.image_url,
+                                                            is_available: true
+                                                        });
+
+                                                    if (prodError) throw prodError;
+                                                    addedCount++;
+                                                }
+
+                                                await fetchData(); // Refresh all data
+                                                setIsImportModalOpen(false);
+                                                alert(`¡Importación exitosa! Se agregaron ${addedCount} productos.`);
+                                            } else {
+                                                alert('No se encontraron productos en el CSV.');
+                                            }
+                                        } catch (error: any) {
+                                            console.error('Error processing CSV:', error);
+                                            alert(`Error al procesar CSV: ${error.message || 'Desconocido'}`);
+                                        } finally {
+                                            setIsImporting(false);
+                                            e.target.value = '';
+                                        }
+                                    }}
+                                />
+                                <div className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition-colors flex flex-col items-center gap-2 text-gray-600">
+                                    <FileSpreadsheet size={24} className="group-hover:text-orange-500" />
+                                    <span className="font-medium group-hover:text-orange-700">Subir archivo CSV</span>
+                                    <span className="text-xs text-gray-400">Columnas auto.: Nombre, Precio, Desc, Categ.</span>
+                                </div>
+                            </label>
+
+                            <button
+                                onClick={() => setIsImportModalOpen(false)}
+                                className="mt-2 text-sm text-gray-500 hover:text-gray-700 underline"
+                            >
+                                Cancelar
                             </button>
                         </div>
                     </div>
