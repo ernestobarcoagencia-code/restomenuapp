@@ -726,7 +726,7 @@ export const MenuManagerView: React.FC = () => {
 
                                                         // Explicitly update our local reference and list
                                                         category = catData;
-                                                        newCategories.push(category);
+                                                        newCategories.push(catData); // Push catData directly which is confirmed Category
                                                     }
 
                                                     // At this point, category IS defined. We assert it for TS if needed or just use it.
