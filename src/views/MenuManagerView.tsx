@@ -676,7 +676,161 @@ export const MenuManagerView: React.FC = () => {
 
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div
+                            className="grid grid-cols-2 gap-4"
+                            onPaste={async (e) => {
+                                const items = e.clipboardData.items;
+                                for (const item of items) {
+                                    if (item.type.indexOf('image') !== -1) {
+                                        const file = item.getAsFile();
+                                        if (file) {
+                                            setIsImporting(true);
+                                            try {
+                                                const formData = new FormData();
+                                                formData.append('image', file);
+
+                                                const { data, error } = await supabase.functions.invoke('process-image', {
+                                                    body: formData,
+                                                });
+
+                                                if (error) throw error;
+                                                if (data.error) throw new Error(data.error);
+
+                                                if (data.items && data.items.length > 0) {
+                                                    const newCategories = [...categories];
+                                                    let addedCount = 0;
+
+                                                    for (const item of data.items) {
+                                                        let category = newCategories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
+
+                                                        if (!category) {
+                                                            const { data: catData, error: catError } = await supabase
+                                                                .from('categories')
+                                                                .insert({
+                                                                    restaurant_id: selectedRestaurant.id,
+                                                                    name: item.category,
+                                                                    sort_order: newCategories.length
+                                                                })
+                                                                .select()
+                                                                .single();
+
+                                                            if (catError) throw catError;
+                                                            category = catData as Category;
+                                                            newCategories.push(category);
+                                                        }
+
+                                                        const { error: prodError } = await supabase
+                                                            .from('products')
+                                                            .insert({
+                                                                restaurant_id: selectedRestaurant.id,
+                                                                category_id: category.id!,
+                                                                name: item.name,
+                                                                description: item.description,
+                                                                price: item.price,
+                                                                image_url: item.image_url,
+                                                                is_available: true
+                                                            });
+
+                                                        if (prodError) throw prodError;
+                                                        addedCount++;
+                                                    }
+
+                                                    await fetchData();
+                                                    setIsImportModalOpen(false);
+                                                    alert(`¡Imagen pegada procesada! Se encontraron ${addedCount} productos.`);
+                                                } else {
+                                                    alert('No se detectaron productos en la imagen pegada.');
+                                                }
+                                            } catch (error: any) {
+                                                console.error('Error processing pasted image:', error);
+                                                alert(`Error al procesar imagen: ${error.message}`);
+                                            } finally {
+                                                setIsImporting(false);
+                                            }
+                                        }
+                                    }
+                                }
+                            }}
+                        >
+                            <label className="cursor-pointer group">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+
+                                        setIsImporting(true);
+                                        try {
+                                            const text = await file.text();
+                                            const { data, error } = await supabase.functions.invoke('process-csv', {
+                                                body: { csv_content: text }
+                                            });
+
+                                            if (error) throw error;
+                                            if (data.error) throw new Error(data.error);
+
+                                            if (data.items && data.items.length > 0) {
+                                                const newCategories = [...categories];
+                                                let addedCount = 0;
+
+                                                for (const item of data.items) {
+                                                    let category = newCategories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
+
+                                                    if (!category) {
+                                                        const { data: catData, error: catError } = await supabase
+                                                            .from('categories')
+                                                            .insert({
+                                                                restaurant_id: selectedRestaurant.id,
+                                                                name: item.category,
+                                                                sort_order: newCategories.length
+                                                            })
+                                                            .select()
+                                                            .single();
+
+                                                        if (catError) throw catError;
+                                                        category = catData as Category;
+                                                        newCategories.push(category);
+                                                    }
+
+                                                    const { error: prodError } = await supabase
+                                                        .from('products')
+                                                        .insert({
+                                                            restaurant_id: selectedRestaurant.id,
+                                                            category_id: category.id!,
+                                                            name: item.name,
+                                                            description: item.description,
+                                                            price: item.price,
+                                                            image_url: item.image_url,
+                                                            is_available: true
+                                                        });
+
+                                                    if (prodError) throw prodError;
+                                                    addedCount++;
+                                                }
+
+                                                await fetchData();
+                                                setIsImportModalOpen(false);
+                                                alert(`¡Importación exitosa! Se agregaron ${addedCount} productos.`);
+                                            } else {
+                                                alert('No se encontraron productos en el CSV.');
+                                            }
+                                        } catch (error: any) {
+                                            console.error('Error processing CSV:', error);
+                                            alert(`Error al procesar CSV: ${error.message}`);
+                                        } finally {
+                                            setIsImporting(false);
+                                            e.target.value = '';
+                                        }
+                                    }}
+                                />
+                                <div className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition-colors flex flex-col items-center gap-2 text-gray-600 h-full justify-center">
+                                    <FileSpreadsheet size={24} className="group-hover:text-orange-500" />
+                                    <span className="font-medium group-hover:text-orange-700 text-sm">Subir CSV</span>
+                                </div>
+                            </label>
+
                             <label className="cursor-pointer group">
                                 <input
                                     type="file"
@@ -759,6 +913,7 @@ export const MenuManagerView: React.FC = () => {
                                 <div className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition-colors flex flex-col items-center gap-2 text-gray-600 h-full justify-center">
                                     <ImageIcon size={24} className="group-hover:text-orange-500" />
                                     <span className="font-medium group-hover:text-orange-700 text-sm">Subir Imagen</span>
+                                    <span className="text-xs text-gray-400">o pegar (Ctrl+V)</span>
                                 </div>
                             </label>
                         </div>
