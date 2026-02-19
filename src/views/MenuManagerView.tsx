@@ -709,6 +709,7 @@ export const MenuManagerView: React.FC = () => {
                                                 for (const item of data.items) {
                                                     // Find or create category
                                                     let category = newCategories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
+
                                                     if (!category) {
                                                         const { data: catData, error: catError } = await supabase
                                                             .from('categories')
@@ -722,9 +723,14 @@ export const MenuManagerView: React.FC = () => {
 
                                                         if (catError) throw catError;
                                                         if (!catData) throw new Error('Failed to create category');
+
+                                                        // Explicitly update our local reference and list
                                                         category = catData;
                                                         newCategories.push(category);
                                                     }
+
+                                                    // At this point, category IS defined. We assert it for TS if needed or just use it.
+                                                    if (!category) throw new Error("Category should be defined here");
 
                                                     // Add product
                                                     const { error: prodError } = await supabase
