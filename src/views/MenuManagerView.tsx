@@ -763,92 +763,17 @@ export const MenuManagerView: React.FC = () => {
                             </label>
                         </div>
 
-                        <label className="block w-full cursor-pointer group">
-                            <input
-                                type="file"
-                                accept=".csv"
-                                className="hidden"
-                                onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-
-                                    setIsImporting(true);
-                                    try {
-                                        const text = await file.text();
-                                        const { data, error } = await supabase.functions.invoke('process-csv', {
-                                            body: { csv_content: text }
-                                        });
-
-                                        if (error) throw error;
-                                        if (data.error) throw new Error(data.error);
-
-                                        if (data.items && data.items.length > 0) {
-                                            const newCategories = [...categories];
-                                            let addedCount = 0;
-
-                                            for (const item of data.items) {
-                                                // Find or create category
-                                                let category = newCategories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
-
-                                                if (!category) {
-                                                    const { data: catData, error: catError } = await supabase
-                                                        .from('categories')
-                                                        .insert({
-                                                            restaurant_id: selectedRestaurant.id,
-                                                            name: item.category,
-                                                            sort_order: newCategories.length
-                                                        })
-                                                        .select()
-                                                        .single();
-
-                                                    if (catError) throw catError;
-                                                    if (!catData) throw new Error('Failed to create category');
-
-                                                    // Explicitly update our local reference and list
-                                                    category = catData as Category;
-                                                    newCategories.push(category);
-                                                }
-
-                                                // At this point, category IS defined. We assert it for TS if needed or just use it.
-                                                if (!category) throw new Error("Category should be defined here");
-
-                                                // Add product
-                                                const { error: prodError } = await supabase
-                                                    .from('products')
-                                                    .insert({
-                                                        restaurant_id: selectedRestaurant.id,
-                                                        category_id: category.id,
-                                                        name: item.name,
-                                                        description: item.description,
-                                                        price: item.price,
-                                                        image_url: item.image_url,
-                                                        is_available: true
-                                                    });
-
-                                                if (prodError) throw prodError;
-                                                addedCount++;
-                                            }
-
-                                            await fetchData(); // Refresh all data
-                                            setIsImportModalOpen(false);
-                                            alert(`¡Importación exitosa! Se agregaron ${addedCount} productos.`);
-                                        } else {
-                                            alert('No se encontraron productos en el CSV.');
-                                        }
-                                    } catch (error: any) {
-                                        console.error('Error processing CSV:', error);
-                                        alert(`Error al procesar CSV: ${error.message || 'Desconocido'}`);
-                                    } finally {
-                                        setIsImporting(false);
-                                        e.target.value = '';
-                                    }
-                                }}
-                            />
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                onClick={() => setIsImportModalOpen(false)}
+                                className="text-sm text-gray-500 hover:text-gray-700 underline"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
                 </div>
-                </div>
-    )
-}
-        </div >
+            )}
+        </div>
     );
 };
