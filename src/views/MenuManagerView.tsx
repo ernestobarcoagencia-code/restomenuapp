@@ -725,8 +725,8 @@ export const MenuManagerView: React.FC = () => {
                                                         if (!catData) throw new Error('Failed to create category');
 
                                                         // Explicitly update our local reference and list
-                                                        category = catData;
-                                                        newCategories.push(catData); // Push catData directly which is confirmed Category
+                                                        category = catData as Category;
+                                                        newCategories.push(category);
                                                     }
 
                                                     // At this point, category IS defined. We assert it for TS if needed or just use it.
