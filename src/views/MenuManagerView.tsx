@@ -844,19 +844,6 @@ export const MenuManagerView: React.FC = () => {
                                     }
                                 }}
                             />
-                            <div className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition-colors flex flex-col items-center gap-2 text-gray-600">
-                                <FileSpreadsheet size={24} className="group-hover:text-orange-500" />
-                                <span className="font-medium group-hover:text-orange-700">Subir archivo CSV</span>
-                                <span className="text-xs text-gray-400">Columnas auto.: Nombre, Precio, Desc, Categ.</span>
-                            </div>
-                        </label>
-
-                        <button
-                            onClick={() => setIsImportModalOpen(false)}
-                            className="mt-2 text-sm text-gray-500 hover:text-gray-700 underline"
-                        >
-                            Cancelar
-                        </button>
                     </div>
                 </div>
                 </div>
